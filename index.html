@@ -9,19 +9,17 @@
     :root{
       --page:#ffffff; --text:#0b1220; --muted:#4a5568;
       --panel:#ffffff; --border:#e5e7eb;
-      --aqua:#eaf8f8;      /* chart area fill on screen */
-      --grid:#7bbbc3;      /* quadrant dashed lines */
+      --aqua:#eaf8f8;
+      --grid:#7bbbc3;
     }
     *{box-sizing:border-box}
     body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--page); color:var(--text);}
-
     .global-tip{
       position:fixed; bottom:8px; left:50%; transform:translateX(-50%);
       font-size:12px; color:var(--muted);
       background:#ffffffcc; backdrop-filter:blur(2px);
       border:1px solid var(--border); border-radius:8px; padding:6px 10px; z-index:20;
     }
-
     .wrap{display:grid; grid-template-columns:320px 1fr; gap:16px; padding:16px;}
     .panel{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px; max-height:78vh; overflow:auto;}
     .panel h2{margin:0 0 10px 0; font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.35px}
@@ -30,28 +28,14 @@
     button:hover{background:#eef2f7}
     .metric{display:flex; align-items:center; gap:8px; padding:6px; border-radius:8px;}
     .metric:hover{background:#f7fafc}
-
-    .plotCard{
-      background:var(--panel); border:1px solid var(--border); border-radius:12px;
-      padding:14px; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start
-    }
-    .chartTitle{
-      text-align:center; font-weight:800; font-size:18px;
-      margin:0 0 8px 0; outline:none; border-radius:6px; padding:2px 6px;
-    }
+    .plotCard{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; flex-direction:column; align-items:flex-start;}
+    .chartTitle{ text-align:center; font-weight:800; font-size:18px; margin:0 0 8px 0; outline:none; border-radius:6px; padding:2px 6px;}
     .chartTitle:focus{box-shadow:0 0 0 2px #dbeafe}
     #chart{margin:0}
-
-    /* Legend color picker popover */
-    .picker{
-      position:fixed; z-index:1000; background:#fff; border:1px solid var(--border);
-      border-radius:10px; padding:8px; box-shadow:0 8px 24px rgba(0,0,0,.08); display:none;
-      gap:8px; align-items:center;
-    }
-    .picker input[type="color"]{
-      width:32px; height:32px; border:none; padding:0; background:none; border-radius:50%;
-      box-shadow:0 0 0 1px var(--border) inset;
-    }
+    .picker{ position:fixed; z-index:1000; background:#fff; border:1px solid var(--border);
+      border-radius:10px; padding:8px; box-shadow:0 8px 24px rgba(0,0,0,.08); display:none; gap:8px; align-items:center;}
+    .picker input[type="color"]{ width:32px; height:32px; border:none; padding:0; background:none; border-radius:50%;
+      box-shadow:0 0 0 1px var(--border) inset;}
     .picker .actions{display:flex; gap:6px}
     .picker .actions button{padding:6px 10px; font-size:12px}
   </style>
@@ -61,7 +45,6 @@
     Tip: Click the legend bubbles to change colors. Click the title to edit it. <b>Drag labels to reposition.</b>
   </div>
 
-  <!-- floating legend color picker -->
   <div id="legendPicker" class="picker" role="dialog" aria-label="Pick color">
     <input id="legendColorInput" type="color" value="#4b34db" />
     <div class="actions">
@@ -83,34 +66,31 @@
     </aside>
 
     <main class="plotCard">
-      <!-- Editable title above the chart (no Plotly placeholders) -->
       <div id="chartTitle" class="chartTitle" contenteditable="true">Industry Impacts on Spot Rates</div>
       <div id="chart"></div>
     </main>
   </div>
 
 <script>
-/* ---------- Square plot config ---------- */
+/* ---- sizing ---- */
 const PLOT_SIZE = 600;
 const MARGINS   = {l:100, r:40, t:10, b:90};
-const LEGEND_W  = 220;                      // little more room between marker and text
+const LEGEND_W  = 220;
 const FIG_W     = PLOT_SIZE + MARGINS.l + MARGINS.r + LEGEND_W;
 const FIG_H     = PLOT_SIZE + MARGINS.t + MARGINS.b;
-
 const chartDiv = document.getElementById('chart');
 chartDiv.style.width  = FIG_W + 'px';
 chartDiv.style.height = FIG_H + 'px';
 const titleDiv = document.getElementById('chartTitle');
 titleDiv.style.width = PLOT_SIZE + 'px';
 titleDiv.style.marginLeft = MARGINS.l + 'px';
-
 const SCREEN_PLOT_BG = getComputedStyle(document.documentElement).getPropertyValue('--aqua').trim();
 
-/* ---------- Data ---------- */
+/* ---- data ---- */
 const METRICS = [
   {name:"M2 Money Supply (FRED)", r2:0.236, lag:6,  coef:  1.2981},
-  {name:"Active Carriers (FMCSA)", r2:0.207, lag:11, coef: -2.4419},
-  {name:"Housing Starts (FRED)",   r2:0.205, lag:12, coef:  0.1405, displayCoef: 1.10},
+  {name:"Active Carriers (FMCSA)", r2:0.207, lag:10, coef: -2.4419},
+  {name:"Housing Starts (FRED)",   r2:0.205, lag:11, coef:  0.1405, displayCoef: 1.10},
   {name:"Class 8 Inventory",       r2:0.198, lag:6,  coef: -0.4929},
   {name:"Industrial Production (FRED)", r2:0.198, lag:6, coef:-0.7167},
   {name:"Truck Tonnage (FRED)",    r2:0.187, lag:7,  coef: -0.9492},
@@ -121,26 +101,25 @@ const METRICS = [
   {name:"Carrier Authority Granted", r2:0.160, lag:10, coef:0.1312},
   {name:"Carrier Authority Revoked", r2:0.159, lag:11, coef:-0.1445},
   {name:"Money Supply (FRED)",     r2:0.150, lag:11, coef: 0.0474},
-  {name:"CHR Routing Guide Depth", r2:0.146, lag:4,  coef: 0.1058, displayCoef: 0.33},
-  {name:"Carrier Authority Reinstated", r2:0.141, lag:9, coef:0.4015},
+  {name:"CHR Routing Guide Depth", r2:0.146, lag:4,  coef: 1.9058, displayCoef: 1.073},
+  {name:"Carrier Authority Reinstated", r2:0.141, lag:8, coef:0.9015},
   {name:"Imports",                 r2:0.139, lag:11, coef: 0.3097},
   {name:"Class 8 Next",            r2:0.134, lag:12, coef: 0.0705},
   {name:"ISM Manufacturing Index", r2:0.133, lag:10, coef:0.2426},
   {name:"CRB Commodity Index",     r2:0.124, lag:8,  coef:-0.1785},
   {name:"U.S. Diesel Prices",      r2:0.122, lag:6,  coef:-0.2861},
   {name:"Class 8 Build (ACT)",     r2:0.121, lag:7,  coef:-0.0526},
-  {name:"Class 8 Cancels",         r2:0.105, lag:7, coef:-0.0375},
+  {name:"Class 8 Cancels",         r2:0.105, lag:12, coef:-0.0375},
   {name:"Advanced Retail Sales (FRED)", r2:0.104, lag:11, coef:0.2122},
-  {name:"PPI (Final Demand)",      r2:0.102, lag:5,  coef: 1.0429},
+  {name:"PPI (Final Demand)",      r2:0.102, lag:3,  coef: 1.0429},
   {name:"S&P GSCI (Commodities)",  r2:0.101, lag:6,  coef:-0.1896},
   {name:"ISM New Orders",          r2:0.097, lag:10, coef:0.0704},
   {name:"Carrier Authority — Net", r2:0.093, lag:6,  coef:0.0009},
   {name:"Bloomberg Commodity Index", r2:0.073, lag:7, coef:-0.1853},
-  {name:"Inventory-to-Sales Ratio (FRED)", r2:0.065, lag:10, coef:-0.3021},
+  {name:"Inventory-to-Sales Ratio (FRED)", r2:0.065, lag:9, coef:-0.3021},
   {name:"Class 8 Backlogs",        r2:0.053, lag:8,  coef:-0.4928}
 ];
 
-/* Default selections */
 const DEFAULT_SELECTION = new Set([
   "M2 Money Supply (FRED)",
   "Active Carriers (FMCSA)",
@@ -156,269 +135,195 @@ const DEFAULT_SELECTION = new Set([
   "Inventory-to-Sales Ratio (FRED)"
 ]);
 
-/* Sidebar (alphabetical) */
+/* ---- sidebar ---- */
 const listEl = document.getElementById('metricList');
 const metricsSorted = METRICS.map((m,idx)=>({m, idx})).sort((a,b)=> a.m.name.localeCompare(b.m.name));
-
-function buildCheckboxes(resetToDefault=false){
+function buildCheckboxes(reset=false){
   listEl.innerHTML = '';
   metricsSorted.forEach(({m, idx})=>{
     const row = document.createElement('label'); row.className='metric';
     const cb = document.createElement('input'); cb.type='checkbox';
-    cb.checked = resetToDefault ? DEFAULT_SELECTION.has(m.name) : cb.checked ?? DEFAULT_SELECTION.has(m.name);
+    cb.checked = reset ? DEFAULT_SELECTION.has(m.name) : cb.checked ?? DEFAULT_SELECTION.has(m.name);
     cb.dataset.index = idx;
     const txt = document.createElement('span'); txt.textContent=m.name;
     row.appendChild(cb); row.appendChild(txt); listEl.appendChild(row);
   });
 }
 buildCheckboxes(true);
+document.getElementById('selectAll').onclick = ()=>{ document.querySelectorAll('#metricList input').forEach(cb=>cb.checked=true); render(); };
+document.getElementById('selectNone').onclick = ()=>{ document.querySelectorAll('#metricList input').forEach(cb=>cb.checked=false); render(); };
+document.getElementById('resetDefault').onclick = ()=>{ buildCheckboxes(true); render(); };
 
-document.getElementById('selectAll').onclick = ()=>{
-  document.querySelectorAll('#metricList input[type=checkbox]').forEach(cb=>cb.checked=true); render();
-};
-document.getElementById('selectNone').onclick = ()=>{
-  document.querySelectorAll('#metricList input[type=checkbox]').forEach(cb=>cb.checked=false); render();
-};
-document.getElementById('resetDefault').onclick = ()=>{
-  buildCheckboxes(true); render();
-};
-
-/* Helpers */
+/* ---- helpers ---- */
 function quantileSpread(values, bins=12){
-  const s=[...values].sort((a,b)=>a-b);
-  const uniq=[...new Set(s)];
-  const map=new Map();
-  uniq.forEach((v,i)=>{
-    const pos=(i+1)/(uniq.length+1);
-    const bin=Math.round(pos*(bins-1));
-    const x=0.05+0.90*(bin/(bins-1));
-    map.set(v,x);
-  });
+  const s=[...values].sort((a,b)=>a-b), uniq=[...new Set(s)], map=new Map();
+  uniq.forEach((v,i)=>{ const pos=(i+1)/(uniq.length+1); const bin=Math.round(pos*(bins-1)); const x=0.05+0.90*(bin/(bins-1)); map.set(v,x); });
   return values.map(v=>map.get(v));
 }
 function jitter(n,amp=0.006){ return Array.from({length:n},()=> (Math.random()-0.5)*2*amp); }
 
-/* Colors (legend-editable) */
+/* ---- colors ---- */
 const DEFAULT_UP = '#4b34db';
 const DEFAULT_DN = '#20a5b3';
 let upColor = DEFAULT_UP;
 let dnColor = DEFAULT_DN;
 let legendTargetTrace = null;
 
-/* Persist user-dragged label positions */
-const customLabelPos = new Map(); // text -> {x,y}
-let currentAnnoTexts = [];
+/* ---- label persistence ---- */
+const customLabelPos = new Map();  // text -> {x,y}
+let currentAnnoTexts = [];         // metric-label order per render
+let LABEL_OFFSET = 0;              // number of axis annotations before metric labels
+let rendering = false;             // guard to ignore relayout during render
 
-/* -------- Tight label placement with tiny spiral (no leader lines) -------- */
+/* ---- tight label placement with micro-spiral ---- */
 function placeLabels(points){
-  // points: [{x,y,text,color}]
-  // Order by y descending (top to bottom) to reduce early overlaps
   points = [...points].sort((a,b)=> b.y - a.y);
-
-  const annos = [];
-  const boxes = [];
-  const CHAR_W = 0.010;   // approx character width in x (0..1 coords)
-  const H = 0.026;        // label height
-  const BASE_DY = 0.012;  // very close under the dot
-  const STEP = 0.006;     // small search step
-  const MAX_RINGS = 6;    // how far we allow the spiral to expand (keeps labels near)
-
-  function rectFromCenter(cx, cy, w, h){ return {x0:cx - w/2, x1:cx + w/2, y0:cy - h/2, y1:cy + h/2}; }
-  function overlaps(a,b){return !(a.x1 < b.x0 || a.x0 > b.x1 || a.y1 < b.y0 || a.y0 > b.y1);}
-  function inside(r){const pad=0.01; return r.x0>pad && r.x1<1-pad && r.y0>pad && r.y1<1-pad;}
+  const annos = [], boxes = [];
+  const CHAR_W = 0.010, H=0.026, BASE_DY=0.012, STEP=0.006, MAX_RINGS=6;
 
   const order = [];
+  const rect = (cx,cy,w,h)=>({x0:cx-w/2,x1:cx+w/2,y0:cy-h/2,y1:cy+h/2});
+  const overlaps=(a,b)=>!(a.x1<b.x0||a.x0>b.x1||a.y1<b.y0||a.y0>b.y1);
+  const inside = r=>{const pad=0.01; return r.x0>pad&&r.x1<1-pad&&r.y0>pad&&r.y1<1-pad;};
 
   for(const p of points){
     order.push(p.text);
-
-    // Honor manual position if it exists
     if(customLabelPos.has(p.text)){
-      const user = customLabelPos.get(p.text);
-      const cx = Math.min(0.99, Math.max(0.01, user.x));
-      const cy = Math.min(0.99, Math.max(0.01, user.y));
-      annos.push({xref:'x', yref:'y', x:cx, y:cy, text:p.text, showarrow:false,
-                  xanchor:'center', yanchor:'middle', font:{size:11, color:p.color}});
-      boxes.push(rectFromCenter(cx, cy, Math.max(0.11, p.text.length*CHAR_W), H));
+      const u=customLabelPos.get(p.text);
+      const cx=Math.min(0.99,Math.max(0.01,u.x)), cy=Math.min(0.99,Math.max(0.01,u.y));
+      annos.push({xref:'x',yref:'y',x:cx,y:cy,text:p.text,showarrow:false,xanchor:'center',yanchor:'middle',font:{size:11,color:p.color}});
+      boxes.push(rect(cx,cy,Math.max(0.11,p.text.length*CHAR_W),H));
       continue;
     }
-
-    const W = Math.max(0.11, p.text.length * CHAR_W);
-
-    // 1) Start directly under the dot (tight)
-    let best = {x: p.x, y: p.y - (BASE_DY + H/2)};
-
-    // 2) If overlap, expand in a tiny spiral around the starting point, prioritizing minimal movement
-    let chosen = null;
-    const dirs = [
-      [0, -1],[1, 0],[-1, 0],[0, 1], // down, right, left, up (relative to plot coordinate system)
-      [1, -1],[-1, -1],[1, 1],[-1, 1]
-    ];
-    const tryPos = (cx, cy) => {
-      const r = rectFromCenter(cx, cy, W, H);
+    const W=Math.max(0.11,p.text.length*CHAR_W);
+    let best={x:p.x,y:p.y-(BASE_DY+H/2)}, chosen=null;
+    const tryPos=(cx,cy)=>{
+      const r=rect(cx,cy,W,H);
       if(!inside(r)) return false;
       for(const b of boxes){ if(overlaps(r,b)) return false; }
-      chosen = {x:cx, y:cy};
-      boxes.push(r);
-      return true;
+      chosen={x:cx,y:cy}; boxes.push(r); return true;
     };
-
-    if(!tryPos(best.x, best.y)){
-      let placed = false;
-      outer: for(let ring=1; ring<=MAX_RINGS; ring++){
+    if(!tryPos(best.x,best.y)){
+      const dirs=[[0,-1],[1,0],[-1,0],[0,1],[1,-1],[-1,-1],[1,1],[-1,1]];
+      let placed=false;
+      outer:for(let ring=1; ring<=MAX_RINGS; ring++){
         for(const [dx,dy] of dirs){
-          const cx = p.x + dx*STEP*ring;
-          const cy = p.y + dy*STEP*ring - (dy===0 ? 0 : 0); // keep roughly near the dot
-          if(tryPos(cx, cy)){ placed=true; break outer; }
+          if(tryPos(p.x+dx*STEP*ring, p.y+dy*STEP*ring)){ placed=true; break outer; }
         }
       }
-      if(!placed){
-        // Clamp as last resort just under the point
-        tryPos(Math.min(0.99, Math.max(0.01, best.x)), Math.min(0.99, Math.max(0.01, best.y)));
-      }
+      if(!placed) tryPos(Math.min(0.99,Math.max(0.01,best.x)), Math.min(0.99,Math.max(0.01,best.y)));
     }
-
-    // Choose anchors based on relative position to the dot (keeps text snug)
     let xa='center', ya='top';
     if (chosen.y >= p.y) ya='bottom';
     if (chosen.x > p.x + 0.005) xa='left';
     if (chosen.x < p.x - 0.005) xa='right';
-
-    annos.push({
-      xref:'x', yref:'y', x:chosen.x, y:chosen.y, text:p.text, showarrow:false,
-      xanchor:xa, yanchor:ya, font:{size:11, color:p.color}
-    });
+    annos.push({xref:'x',yref:'y',x:chosen.x,y:chosen.y,text:p.text,showarrow:false,xanchor:xa,yanchor:ya,font:{size:11,color:p.color}});
   }
-
-  return {annotations: annos, labelsOrder: order};
+  return {annotations:annos, labelsOrder:order};
 }
 
-/* Render */
+/* ---- render ---- */
 function render(){
-  const sel=[];
+  rendering = true;
+
+  const selected=[];
   document.querySelectorAll('#metricList input[type=checkbox]').forEach(cb=>{
-    if(cb.checked) sel.push(METRICS[Number(cb.dataset.index)]);
+    if(cb.checked) selected.push(METRICS[Number(cb.dataset.index)]);
   });
 
-  const pos = sel.filter(m=>m.coef>=0);
-  const neg = sel.filter(m=>m.coef<0);
+  const pos = selected.filter(m=>m.coef>=0);
+  const neg = selected.filter(m=>m.coef<0);
 
   const allLags = METRICS.map(m=>m.lag);
   const yMin = Math.min(...allLags), yMax = Math.max(...allLags);
-
-  const buildCoords = (arr)=> {
+  const coords = arr=>{
     const mags = arr.map(m=>Math.abs(m.displayCoef ?? m.coef));
-    const xq = quantileSpread(mags, 12).map(v=> Math.min(0.97, Math.max(0.03, v + jitter(1)[0])));
-    const y = arr.map(m=> (m.lag - yMin)/(yMax - yMin) ).map(v=> 0.05 + 0.90*v);
-    return {x:xq, y};
+    const x = quantileSpread(mags,12).map(v=>Math.min(0.97,Math.max(0.03,v + jitter(1)[0])));
+    const y = arr.map(m=>(m.lag - yMin)/(yMax-yMin)).map(v=>0.05+0.90*v);
+    return {x,y};
   };
-  const posC = buildCoords(pos);
-  const negC = buildCoords(neg);
+  const posC = coords(pos), negC = coords(neg);
 
-  const pointsForLabels = [];
-  posC.x.forEach((x,i)=> pointsForLabels.push({x, y:posC.y[i], text:pos[i].name, color:upColor}));
-  negC.x.forEach((x,i)=> pointsForLabels.push({x, y:negC.y[i], text:neg[i].name, color:dnColor}));
-  const placed = placeLabels(pointsForLabels);
+  const points=[];
+  posC.x.forEach((x,i)=> points.push({x, y:posC.y[i], text:pos[i].name, color:upColor}));
+  negC.x.forEach((x,i)=> points.push({x, y:negC.y[i], text:neg[i].name, color:dnColor}));
+  const placed = placeLabels(points);
   currentAnnoTexts = placed.labelsOrder;
 
-  const padName = s => '\u00A0\u00A0' + s; // extra space between legend marker & text
+  const padName = s => '\u00A0\u00A0' + s;
 
-  const buildTrace = (arr, coords, color, label) => {
-    if(arr.length === 0){
-      return {
-        x:[0.5], y:[0.5], mode:'markers', type:'scatter',
-        name: padName(label), showlegend:true, hoverinfo:'skip',
-        marker:{size:20, color, line:{color:'rgba(0,0,0,0.25)', width:1}},
-        visible:'legendonly'
-      };
-    }
-    return {
-      x: coords.x, y: coords.y, type:'scatter', mode:'markers', name: padName(label),
-      text: arr.map(m=>m.name), hovertemplate:'%{text}<extra></extra>',
-      marker:{ size:20, color, line:{color:'rgba(0,0,0,0.25)', width:1} }
-    };
+  const trace = (arr, c, col, label)=>{
+    if(!arr.length) return {x:[0.5], y:[0.5], type:'scatter', mode:'markers', name:padName(label),
+      marker:{size:20, color:col, line:{color:'rgba(0,0,0,0.25)', width:1}}, hoverinfo:'skip', visible:'legendonly'};
+    return {x:c.x, y:c.y, type:'scatter', mode:'markers', name:padName(label),
+      text:arr.map(m=>m.name), hovertemplate:'%{text}<extra></extra>',
+      marker:{size:20, color:col, line:{color:'rgba(0,0,0,0.25)', width:1}}};
   };
 
   const baseShapes = [
-    {type:'line', xref:'x', yref:'y', x0:0.5, x1:0.5, y0:0.0, y1:1.0,
-     line:{color:getComputedStyle(document.documentElement).getPropertyValue('--grid').trim(), width:2, dash:'dot'}},
-    {type:'line', xref:'x', yref:'y', x0:0.0, x1:1.0, y0:0.5, y1:0.5,
-     line:{color:getComputedStyle(document.documentElement).getPropertyValue('--grid').trim(), width:2, dash:'dot'}}
+    {type:'line', xref:'x', yref:'y', x0:0.5, x1:0.5, y0:0, y1:1, line:{color:getComputedStyle(document.documentElement).getPropertyValue('--grid').trim(), width:2, dash:'dot'}},
+    {type:'line', xref:'x', yref:'y', x0:0, x1:1, y0:0.5, y1:0.5, line:{color:getComputedStyle(document.documentElement).getPropertyValue('--grid').trim(), width:2, dash:'dot'}}
   ];
 
-  const OFFSET_EQ = -0.07;
+  const OFFSET_EQ=-0.07;
   const axisAnnots = [
-    {xref:'paper', yref:'paper', x:OFFSET_EQ, y:0.02, text:'<b>Immediate Effect</b>', showarrow:false, textangle:-90,
-      font:{size:12, color:'#2a3b4f'}},
-    {xref:'paper', yref:'paper', x:OFFSET_EQ, y:0.98, text:'<b>Delayed Effect</b>',   showarrow:false, textangle:-90,
-      font:{size:12, color:'#2a3b4f'}},
-    {xref:'paper', yref:'paper', x:0.05, y:OFFSET_EQ, text:'<b>Low Impact</b>',  showarrow:false,
-      font:{size:12, color:'#2a3b4f'}},
-    {xref:'paper', yref:'paper', x:0.95, y:OFFSET_EQ, text:'<b>High Impact</b>', showarrow:false, xanchor:'right',
-      font:{size:12, color:'#2a3b4f'}}
+    {xref:'paper', yref:'paper', x:OFFSET_EQ, y:0.02, text:'<b>Immediate Effect</b>', showarrow:false, textangle:-90, font:{size:12, color:'#2a3b4f'}},
+    {xref:'paper', yref:'paper', x:OFFSET_EQ, y:0.98, text:'<b>Delayed Effect</b>',   showarrow:false, textangle:-90, font:{size:12, color:'#2a3b4f'}},
+    {xref:'paper', yref:'paper', x:0.05, y:OFFSET_EQ, text:'<b>Low Impact</b>',  showarrow:false, font:{size:12, color:'#2a3b4f'}},
+    {xref:'paper', yref:'paper', x:0.95, y:OFFSET_EQ, text:'<b>High Impact</b>', showarrow:false, xanchor:'right', font:{size:12, color:'#2a3b4f'}}
   ];
+  LABEL_OFFSET = axisAnnots.length; // <-- crucial: metric labels start after these
 
   const layout = {
-    width: FIG_W, height: FIG_H,
-    paper_bgcolor:'rgba(0,0,0,0)',
-    plot_bgcolor: SCREEN_PLOT_BG,
+    width:FIG_W, height:FIG_H,
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:SCREEN_PLOT_BG,
     font:{color:getComputedStyle(document.documentElement).getPropertyValue('--text').trim()},
     margin:{l:MARGINS.l, r:MARGINS.r + LEGEND_W, t:MARGINS.t, b:MARGINS.b},
-    xaxis:{title:'', range:[0,1], showticklabels:false, ticks:'', showgrid:false, zeroline:false, fixedrange:true},
-    yaxis:{title:'', range:[0,1], showticklabels:false, ticks:'', showgrid:false, zeroline:false, fixedrange:true},
+    xaxis:{range:[0,1], showticklabels:false, ticks:'', showgrid:false, zeroline:false, fixedrange:true},
+    yaxis:{range:[0,1], showticklabels:false, ticks:'', showgrid:false, zeroline:false, fixedrange:true},
     shapes:[...baseShapes],
     annotations:[...axisAnnots, ...placed.annotations],
     legend:{orientation:'v', x:1.02, y:0.5, xanchor:'left', bgcolor:'rgba(0,0,0,0)', itemsizing:'constant'}
   };
 
   Plotly.react('chart',
-    [
-      buildTrace(pos, posC, upColor, 'Upward Impact on Spot Rates'),
-      buildTrace(neg, negC, dnColor, 'Downward Impact on Spot Rates')
-    ],
+    [ trace(pos, posC, upColor, 'Upward Impact on Spot Rates'),
+      trace(neg, negC, dnColor, 'Downward Impact on Spot Rates') ],
     layout,
-    {
-      displayModeBar:false,
-      scrollZoom:false,
-      doubleClick:false,
-      editable:true,
-      edits:{
-        annotationPosition:true,
-        titleText:false,
-        legendText:false,
-        axisTitleText:false,
-        annotationText:false,
-        legendPosition:false,
-        shapePosition:false,
-        colorbarPosition:false,
-        colorbarTitleText:false
-      }
-    }
+    { displayModeBar:false, scrollZoom:false, doubleClick:false, editable:true,
+      edits:{ annotationPosition:true, titleText:false, legendText:false, axisTitleText:false,
+              annotationText:false, legendPosition:false, shapePosition:false,
+              colorbarPosition:false, colorbarTitleText:false } }
   ).then(()=>{
     const gd = document.getElementById('chart');
     if (gd.removeAllListeners) gd.removeAllListeners('plotly_legendclick');
     attachLegendColorPicker();
 
-    // Persist manual annotation drags
     if (gd.removeAllListeners) gd.removeAllListeners('plotly_relayout');
     gd.on('plotly_relayout', (ev)=>{
-      Object.keys(ev || {}).forEach(k=>{
+      if (rendering) return;  // ignore internal updates during render
+      for (const k of Object.keys(ev||{})){
         const m = k.match(/^annotations\[(\d+)\]\.(x|y)$/);
-        if(!m) return;
+        if(!m) continue;
         const idx = Number(m[1]);
-        const labelText = currentAnnoTexts[idx];
-        if (!labelText) return;
+        if (idx < LABEL_OFFSET) continue;            // skip axis annotations
+        const labelIdx = idx - LABEL_OFFSET;
+        const labelText = currentAnnoTexts[labelIdx];
+        if (!labelText) continue;
+
         const x = ev[`annotations[${idx}].x`] ?? gd.layout.annotations[idx].x;
         const y = ev[`annotations[${idx}].y`] ?? gd.layout.annotations[idx].y;
-        if (typeof x === 'number' && typeof y === 'number') {
+        if (typeof x === 'number' && typeof y === 'number'){
           customLabelPos.set(labelText, {x,y});
         }
-      });
+      }
     });
+
+    rendering = false;
   });
 }
 
-/* Legend color-picker (opens next to legend) */
+/* ---- legend color picker ---- */
 const picker = document.getElementById('legendPicker');
 const pickerInput = document.getElementById('legendColorInput');
 const pickerDone  = document.getElementById('pickerDone');
@@ -430,41 +335,35 @@ function attachLegendColorPicker(){
   gd.on('plotly_legendclick', function(e){
     if(e && e.event) e.event.preventDefault();
     legendTargetTrace = e.curveNumber;         // 0 => Upward, 1 => Downward
-    const current = (legendTargetTrace === 0) ? upColor : dnColor;
-    pickerInput.value = current;
-
+    pickerInput.value = (legendTargetTrace===0)? upColor : dnColor;
     const { clientX, clientY } = e.event || {clientX:0, clientY:0};
     picker.style.left = (clientX + 10) + 'px';
     picker.style.top  = (clientY - 14) + 'px';
     picker.style.display = 'flex';
-
-    if (pickerInput.showPicker) { setTimeout(()=>pickerInput.showPicker(), 0); }
-    else { pickerInput.focus(); }
+    if (pickerInput.showPicker) setTimeout(()=>pickerInput.showPicker(), 0);
+    else pickerInput.focus();
     return false;
   });
 }
 
 pickerDone.addEventListener('click', ()=>{
-  if (legendTargetTrace === null) { picker.style.display='none'; return; }
+  if (legendTargetTrace===null){ picker.style.display='none'; return; }
   const chosen = pickerInput.value;
-  if (legendTargetTrace === 0) upColor = chosen; else dnColor = chosen;
-  picker.style.display = 'none';
-  render();                      // updates bubble + label colors
-  legendTargetTrace = null;
-});
-pickerReset.addEventListener('click', ()=>{
-  if (legendTargetTrace === null) return;
-  if (legendTargetTrace === 0) upColor = DEFAULT_UP; else dnColor = DEFAULT_DN;
+  if (legendTargetTrace===0) upColor = chosen; else dnColor = chosen;
   picker.style.display = 'none';
   render();
   legendTargetTrace = null;
 });
-pickerCancel.addEventListener('click', ()=>{
+pickerReset.addEventListener('click', ()=>{
+  if (legendTargetTrace===null) return;
+  if (legendTargetTrace===0) upColor = DEFAULT_UP; else dnColor = DEFAULT_DN;
   picker.style.display = 'none';
+  render();
   legendTargetTrace = null;
 });
+pickerCancel.addEventListener('click', ()=>{ picker.style.display='none'; legendTargetTrace=null; });
 
-/* Init */
+/* ---- init ---- */
 render();
 document.getElementById('metricList').addEventListener('change', render);
 document.getElementById('chartTitle').addEventListener('input', ()=>{});
